@@ -1,0 +1,351 @@
+import turtle
+import time
+import random
+import math
+
+# إعداد النافذة
+window = turtle.Screen()
+window.title("🎮 لعبة الثعبان المطورة 3D 🐍")
+window.bgcolor("#0a0a1e")  # خلفية داكنة
+window.setup(width=800, height=800)
+window.tracer(0)
+
+# تأثير النجوم في الخلفية
+stars = []
+for _ in range(50):
+    star = turtle.Turtle()
+    star.speed(0)
+    star.penup()
+    star.color("white")
+    star.hideturtle()
+    star.goto(random.randint(-390, 390), random.randint(-390, 390))
+    stars.append(star)
+
+def animate_stars():
+    for star in stars:
+        if random.random() < 0.1:  # 10% فرصة للتألق
+            star.clear()
+            star.dot(random.randint(1, 3))
+
+# تأثير الخلفية المتحركة
+def draw_grid():
+    grid = turtle.Turtle()
+    grid.speed(0)
+    grid.penup()
+    grid.hideturtle()
+    grid.color("#1a1a3e")
+    
+    # رسم خطوط الشبكة
+    for i in range(-400, 401, 40):
+        grid.penup()
+        grid.goto(i, -400)
+        grid.pendown()
+        grid.goto(i, 400)
+        grid.penup()
+        grid.goto(-400, i)
+        grid.pendown()
+        grid.goto(400, i)
+
+draw_grid()
+
+# إضافة الحدود مع تأثير النيون المتحرك
+class NeonBorder(turtle.Turtle):
+    def __init__(self):
+        super().__init__()
+        self.speed(0)
+        self.penup()
+        self.hideturtle()
+        self.color_index = 0
+        self.colors = ["#ff0000", "#ff3333", "#ff6666", "#ff3333"]
+    
+    def draw(self):
+        self.clear()
+        self.color(self.colors[self.color_index])
+        self.pensize(3)
+        self.goto(-390, 390)
+        self.pendown()
+        for _ in range(4):
+            self.forward(780)
+            self.right(90)
+        self.color_index = (self.color_index + 1) % len(self.colors)
+
+border = NeonBorder()
+
+# تحسين شكل الثعبان
+class SnakeSegment(turtle.Turtle):
+    def __init__(self, is_head=False):
+        super().__init__()
+        self.speed(0)
+        self.shape("square")
+        self.penup()
+        if is_head:
+            self.shapesize(1.5, 1.5)
+            self.color("#00ff88")  # رأس براق
+        else:
+            self.shapesize(1.2, 1.2)
+            self.color("#00dd66")  # جسم أغمق
+
+# رأس الثعبان المحسن
+head = SnakeSegment(is_head=True)
+head.direction = "stop"
+
+# تأثيرات الطعام المحسنة
+class EnhancedFoodEffect(turtle.Turtle):
+    def __init__(self, color):
+        super().__init__()
+        self.speed(0)
+        self.shape("circle")
+        self.color(color)
+        self.penup()
+        self.hideturtle()
+    
+    def play_effect(self, x, y):
+        self.goto(x, y)
+        self.clear()
+        self.penup()
+        self.showturtle()
+        
+        # تأثير دائري متوسع
+        for size in range(20):
+            self.shapesize(size/10.0)
+            self.left(18)  # دوران
+            window.update()
+            time.sleep(0.02)
+        
+        # تأثير النجوم المتناثرة
+        for _ in range(8):
+            angle = random.randint(0, 360)
+            distance = random.randint(20, 40)
+            self.goto(x + math.cos(math.radians(angle)) * distance,
+                     y + math.sin(math.radians(angle)) * distance)
+            self.dot(5)
+        
+        self.hideturtle()
+        self.clear()
+
+# الطعام المحسن
+foods = []
+food_colors = ["#ff3366", "#ffcc00", "#cc33ff"]  # ألوان زاهية
+food_points = [10, 20, 30]
+food_effects = [EnhancedFoodEffect(color) for color in food_colors]
+
+for i in range(3):
+    food = turtle.Turtle()
+    food.speed(0)
+    food.shape("circle")
+    food.color(food_colors[i])
+    food.shapesize(0.8 + (i * 0.2))
+    food.penup()
+    x = random.randint(-370, 370)
+    y = random.randint(-370, 370)
+    food.goto(x, y)
+    foods.append({"turtle": food, "points": food_points[i], "effect": food_effects[i]})
+
+# قائمة لتخزين أجزاء جسم الثعبان
+segments = []
+
+# النقاط والسرعة
+score = 0
+high_score = 0
+speed = 0.1
+
+# لوحة النقاط المحسنة مع تأثيرات 3D
+class EnhancedScoreBoard(turtle.Turtle):
+    def __init__(self):
+        super().__init__()
+        self.speed(0)
+        self.penup()
+        self.hideturtle()
+        self.goto(0, 360)
+        
+        # إضافة ظلال متعددة للتأثير ثلاثي الأبعاد
+        self.shadows = []
+        for i in range(3):
+            shadow = turtle.Turtle()
+            shadow.speed(0)
+            shadow.penup()
+            shadow.hideturtle()
+            self.shadows.append(shadow)
+    
+    def update(self, score, high_score, speed):
+        text = f"🏆 النقاط: {score} | أعلى نتيجة: {high_score} | السرعة: {int((1/speed)*10)}"
+        
+        # رسم الظلال المتعددة
+        for i, shadow in enumerate(self.shadows):
+            shadow.clear()
+            shadow.goto(2 + i, 358 - i)
+            shadow.color(f"#{20+i*10:02x}{20+i*10:02x}{30+i*10:02x}")
+            shadow.write(text, align="center", font=("Arial", 24, "bold"))
+        
+        # النص الرئيسي
+        self.clear()
+        self.color("#ffffff")
+        self.write(text, align="center", font=("Arial", 24, "bold"))
+
+scoreboard = EnhancedScoreBoard()
+
+# شاشة الإيقاف المؤقت المحسنة
+class EnhancedPauseScreen(turtle.Turtle):
+    def __init__(self):
+        super().__init__()
+        self.speed(0)
+        self.penup()
+        self.hideturtle()
+        self.color("#ffffff")
+        self.frame = 0
+    
+    def show(self):
+        self.clear()
+        self.goto(0, 50)
+        self.write("⏸️ إيقاف مؤقت", align="center", font=("Arial", 40, "bold"))
+        self.goto(0, -50)
+        self.write("اضغط SPACE للمتابعة", align="center", font=("Arial", 20))
+        
+        # إضافة إطار متحرك
+        self.frame = (self.frame + 1) % 8
+        size = 100 + math.sin(self.frame * 0.5) * 10
+        self.goto(0, 0)
+        self.pensize(3)
+        self.color("#3498db")
+        self.pendown()
+        for _ in range(4):
+            self.forward(size)
+            self.right(90)
+        self.penup()
+
+pause_screen = EnhancedPauseScreen()
+pause = False
+
+def toggle_pause():
+    global pause
+    pause = not pause
+
+# تحسين التحكم
+def go_up():
+    if head.direction != "down" and not pause:
+        head.direction = "up"
+        head.setheading(90)
+
+def go_down():
+    if head.direction != "up" and not pause:
+        head.direction = "down"
+        head.setheading(270)
+
+def go_left():
+    if head.direction != "right" and not pause:
+        head.direction = "left"
+        head.setheading(180)
+
+def go_right():
+    if head.direction != "left" and not pause:
+        head.direction = "right"
+        head.setheading(0)
+
+def move():
+    if head.direction == "up":
+        y = head.ycor()
+        head.sety(y + 20)
+    if head.direction == "down":
+        y = head.ycor()
+        head.sety(y - 20)
+    if head.direction == "left":
+        x = head.xcor()
+        head.setx(x - 20)
+    if head.direction == "right":
+        x = head.xcor()
+        head.setx(x + 20)
+
+# ربط المفاتيح
+window.listen()
+window.onkeypress(go_up, "Up")
+window.onkeypress(go_down, "Down")
+window.onkeypress(go_left, "Left")
+window.onkeypress(go_right, "Right")
+window.onkeypress(go_up, "w")
+window.onkeypress(go_down, "s")
+window.onkeypress(go_left, "a")
+window.onkeypress(go_right, "d")
+window.onkeypress(toggle_pause, "space")
+
+# حلقة اللعبة الرئيسية
+while True:
+    window.update()
+    
+    # تحديث التأثيرات
+    animate_stars()
+    border.draw()
+    
+    if pause:
+        pause_screen.show()
+    else:
+        # التحقق من الاصطدام بالحدود
+        if head.xcor() > 380 or head.xcor() < -380 or head.ycor() > 380 or head.ycor() < -380:
+            time.sleep(1)
+            head.goto(0, 0)
+            head.direction = "stop"
+            
+            # إخفاء الأجزاء
+            for segment in segments:
+                segment.goto(1000, 1000)
+            segments.clear()
+            
+            # إعادة تعيين النقاط والسرعة
+            score = 0
+            speed = 0.1
+            scoreboard.update(score, high_score, speed)
+
+        # التحقق من التقاط الطعام
+        for food_item in foods:
+            if head.distance(food_item["turtle"]) < 20:
+                # تشغيل تأثير التقاط الطعام
+                food_item["effect"].play_effect(food_item["turtle"].xcor(), food_item["turtle"].ycor())
+                
+                # نقل الطعام إلى موقع عشوائي
+                x = random.randint(-370, 370)
+                y = random.randint(-370, 370)
+                food_item["turtle"].goto(x, y)
+
+                # إضافة جزء جديد للثعبان
+                new_segment = SnakeSegment()
+                segments.append(new_segment)
+
+                # زيادة النقاط والسرعة
+                score += food_item["points"]
+                if score > high_score:
+                    high_score = score
+                if score % 50 == 0:
+                    speed *= 0.9
+                scoreboard.update(score, high_score, speed)
+
+        # تحريك أجزاء الجسم
+        for index in range(len(segments)-1, 0, -1):
+            x = segments[index-1].xcor()
+            y = segments[index-1].ycor()
+            segments[index].goto(x, y)
+
+        # تحريك الجزء الأول إلى الرأس
+        if len(segments) > 0:
+            x = head.xcor()
+            y = head.ycor()
+            segments[0].goto(x, y)
+
+        move()
+
+        # التحقق من الاصطدام بالجسم
+        for segment in segments:
+            if segment.distance(head) < 20:
+                time.sleep(1)
+                head.goto(0, 0)
+                head.direction = "stop"
+
+                # إخفاء الأجزاء
+                for segment in segments:
+                    segment.goto(1000, 1000)
+                segments.clear()
+
+                # إعادة تعيين النقاط والسرعة
+                score = 0
+                speed = 0.1
+                scoreboard.update(score, high_score, speed)
+
+    time.sleep(speed) 
